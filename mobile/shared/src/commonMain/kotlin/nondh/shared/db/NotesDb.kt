@@ -6,6 +6,7 @@ interface NotesDb {
     fun upsert(note: Note)
     fun get(id: String): Note?
     fun since(ts: Long): List<Note>
+    fun delete(id: String)
 }
 
 class InMemoryNotesDb : NotesDb {
@@ -19,4 +20,8 @@ class InMemoryNotesDb : NotesDb {
 
     override fun since(ts: Long): List<Note> =
         data.values.filter { it.updatedAt > ts }.sortedBy { it.updatedAt }
+
+    override fun delete(id: String) {
+        data.remove(id)
+    }
 }

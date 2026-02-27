@@ -11,6 +11,9 @@ SELECT * FROM notes WHERE id = ?;
 selectSince:
 SELECT * FROM notes WHERE updated_at > ? ORDER BY updated_at ASC;
 
+deleteById:
+DELETE FROM notes WHERE id = ?;
+
 upsert:
 INSERT OR REPLACE INTO notes(id, title, body, updated_at)
 VALUES (?, ?, ?, ?);

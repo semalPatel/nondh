@@ -27,4 +27,5 @@ dependencies {
     implementation(compose.foundation)
     implementation(compose.material3)
     implementation(compose.ui)
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.0")
 }

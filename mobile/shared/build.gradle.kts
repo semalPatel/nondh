@@ -28,6 +28,7 @@ kotlin {
                 implementation("io.ktor:ktor-client-content-negotiation:3.1.0")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:3.1.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
             }
         }
         val commonTest by getting {
@@ -38,11 +39,13 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 implementation("io.ktor:ktor-client-okhttp:3.1.0")
+                implementation("app.cash.sqldelight:android-driver:2.2.1")
             }
         }
         val iosMain by getting {
             dependencies {
                 implementation("io.ktor:ktor-client-darwin:3.1.0")
+                implementation("app.cash.sqldelight:native-driver:2.2.1")
             }
         }
     }

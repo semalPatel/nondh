@@ -18,6 +18,10 @@ class SyncManager(
         queue.enqueue(note)
     }
 
+    fun deleteLocal(id: String) {
+        db.delete(id)
+    }
+
     suspend fun sync() {
         val pending = queue.drain()
         pending.forEach { api.upsert(it) }
