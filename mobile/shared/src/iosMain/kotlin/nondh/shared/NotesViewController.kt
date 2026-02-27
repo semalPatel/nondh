@@ -17,7 +17,7 @@ fun NotesViewController(): UIViewController = ComposeUIViewController {
                 id = "local-${state.notes.size}",
                 title = "",
                 body = body,
-                updatedAt = (platform.Foundation.NSDate().timeIntervalSince1970() * 1000).toLong()
+                updatedAt = (platform.Foundation.NSDate().timeIntervalSince1970 * 1000).toLong()
             )
         )
     })
