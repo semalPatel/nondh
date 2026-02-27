@@ -47,11 +47,19 @@ class MainActivity : ComponentActivity() {
                 state = viewModel.state
             }
 
+            fun triggerSync() {
+                lifecycleScope.launch {
+                    viewModel.syncNow()
+                    refresh()
+                }
+            }
+
             NotesScreen(
                 state = state,
                 onAdd = { body ->
                     viewModel.addNote(body, System.currentTimeMillis())
                     refresh()
+                    triggerSync()
                 },
                 onSelect = { note ->
                     viewModel.selectNote(note)
@@ -64,20 +72,19 @@ class MainActivity : ComponentActivity() {
                 onSave = {
                     viewModel.saveDraft(System.currentTimeMillis())
                     refresh()
+                    triggerSync()
                 },
                 onDelete = {
                     viewModel.deleteSelected(System.currentTimeMillis())
                     refresh()
+                    triggerSync()
                 },
                 onBack = {
                     viewModel.closeEditor()
                     refresh()
                 },
                 onSyncNow = {
-                    lifecycleScope.launch {
-                        viewModel.syncNow()
-                        refresh()
-                    }
+                    triggerSync()
                 },
                 onOpenSettings = {
                     viewModel.openSettings()

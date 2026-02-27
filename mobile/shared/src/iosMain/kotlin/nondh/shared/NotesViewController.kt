@@ -49,12 +49,16 @@ fun NotesViewController(): UIViewController = ComposeUIViewController {
     }
 
     fun nowMillis(): Long = time(null) * 1000L
+    fun triggerSync() {
+        syncRunner.trigger()
+    }
 
     NotesScreen(
         state = state,
         onAdd = { body ->
             viewModel.addNote(body, nowMillis())
             refresh()
+            triggerSync()
         },
         onSelect = { note ->
             viewModel.selectNote(note)
@@ -67,18 +71,18 @@ fun NotesViewController(): UIViewController = ComposeUIViewController {
         onSave = {
             viewModel.saveDraft(nowMillis())
             refresh()
+            triggerSync()
         },
         onDelete = {
             viewModel.deleteSelected(nowMillis())
             refresh()
+            triggerSync()
         },
         onBack = {
             viewModel.closeEditor()
             refresh()
         },
-        onSyncNow = {
-            syncRunner.trigger()
-        },
+        onSyncNow = { triggerSync() },
         onOpenSettings = {
             viewModel.openSettings()
             refresh()
