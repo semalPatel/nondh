@@ -1,10 +1,10 @@
 plugins {
-    kotlin("multiplatform") version "2.2.20"
-    kotlin("plugin.serialization") version "2.2.20"
-    id("org.jetbrains.compose") version "1.10.1"
-    id("com.android.kotlin.multiplatform.library") version "9.0.1"
-    id("org.jetbrains.kotlin.plugin.compose") version "2.2.20"
-    id("app.cash.sqldelight") version "2.2.1"
+    kotlin("multiplatform")
+    kotlin("plugin.serialization")
+    id("org.jetbrains.compose")
+    id("com.android.kotlin.multiplatform.library")
+    id("org.jetbrains.kotlin.plugin.compose")
+    id("app.cash.sqldelight")
 }
 
 kotlin {
