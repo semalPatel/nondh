@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
             baseUrl = "http://10.0.2.2:8080",
             token = "CHANGE_ME"
         )
-        val syncRunner = SyncRunner(lifecycleScope) { viewModel.currentSyncManager() }
+        val syncRunner = SyncRunner(lifecycleScope) { viewModel.syncNow() }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -72,6 +72,12 @@ class MainActivity : ComponentActivity() {
                 onBack = {
                     viewModel.closeEditor()
                     refresh()
+                },
+                onSyncNow = {
+                    lifecycleScope.launch {
+                        viewModel.syncNow()
+                        refresh()
+                    }
                 },
                 onOpenSettings = {
                     viewModel.openSettings()

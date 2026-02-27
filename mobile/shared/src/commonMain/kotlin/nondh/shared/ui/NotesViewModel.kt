@@ -11,13 +11,23 @@ class NotesViewModel(
     baseUrl: String,
     token: String
 ) {
-    private var sync: SyncManager = SyncManager(db, NotesApiClient(baseUrl, token))
-    var state: NotesState = NotesState(
-        notes = db.listVisible(),
-        settingsBaseUrl = baseUrl,
-        settingsToken = token
-    )
+    private var sync: SyncManager
+    var state: NotesState
         private set
+
+    init {
+        val savedBaseUrl = db.getSetting("base_url") ?: baseUrl
+        val savedToken = db.getSetting("token") ?: token
+        sync = SyncManager(db, NotesApiClient(savedBaseUrl, savedToken))
+        state = NotesState(
+            notes = db.listVisible(),
+            settingsBaseUrl = savedBaseUrl,
+            settingsToken = savedToken,
+            syncInProgress = sync.status.inProgress,
+            lastSyncAt = sync.status.lastSuccessAt,
+            lastSyncError = sync.status.lastError
+        )
+    }
 
     fun currentSyncManager(): SyncManager = sync
 
@@ -72,6 +82,18 @@ class NotesViewModel(
 
     fun saveSettings() {
         sync = SyncManager(db, NotesApiClient(state.settingsBaseUrl, state.settingsToken))
+        db.setSetting("base_url", state.settingsBaseUrl)
+        db.setSetting("token", state.settingsToken)
         state = state.copy(showSettings = false)
+    }
+
+    suspend fun syncNow() {
+        sync.sync()
+        state = state.copy(
+            syncInProgress = sync.status.inProgress,
+            lastSyncAt = sync.status.lastSuccessAt,
+            lastSyncError = sync.status.lastError,
+            notes = db.listVisible()
+        )
     }
 }

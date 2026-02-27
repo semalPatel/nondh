@@ -6,6 +6,11 @@ CREATE TABLE notes (
   deleted_at INTEGER
 );
 
+CREATE TABLE settings (
+  key TEXT NOT NULL PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
 selectById:
 SELECT * FROM notes WHERE id = ?;
 
@@ -21,3 +26,9 @@ DELETE FROM notes WHERE id = ?;
 upsert:
 INSERT OR REPLACE INTO notes(id, title, body, updated_at, deleted_at)
 VALUES (?, ?, ?, ?, ?);
+
+getSetting:
+SELECT value FROM settings WHERE key = ?;
+
+setSetting:
+INSERT OR REPLACE INTO settings(key, value) VALUES (?, ?);

@@ -8,6 +8,8 @@ interface NotesDb {
     fun since(ts: Long): List<Note>
     fun delete(id: String)
     fun listVisible(): List<Note>
+    fun getSetting(key: String): String?
+    fun setSetting(key: String, value: String)
 }
 
 class InMemoryNotesDb : NotesDb {
@@ -28,4 +30,12 @@ class InMemoryNotesDb : NotesDb {
 
     override fun listVisible(): List<Note> =
         data.values.filter { it.deletedAt == null }.sortedBy { it.updatedAt }
+
+    private val settings = mutableMapOf<String, String>()
+
+    override fun getSetting(key: String): String? = settings[key]
+
+    override fun setSetting(key: String, value: String) {
+        settings[key] = value
+    }
 }

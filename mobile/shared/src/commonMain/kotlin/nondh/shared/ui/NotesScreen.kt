@@ -38,7 +38,8 @@ fun NotesScreen(
     onUpdateSettingsBaseUrl: (String) -> Unit,
     onUpdateSettingsToken: (String) -> Unit,
     onSaveSettings: () -> Unit,
-    onCloseSettings: () -> Unit
+    onCloseSettings: () -> Unit,
+    onSyncNow: () -> Unit
 ) {
     if (state.showSettings) {
         SettingsScreen(
@@ -62,7 +63,11 @@ fun NotesScreen(
             notes = state.notes,
             onAdd = onAdd,
             onSelect = onSelect,
-            onOpenSettings = onOpenSettings
+            onOpenSettings = onOpenSettings,
+            onSyncNow = onSyncNow,
+            syncInProgress = state.syncInProgress,
+            lastSyncAt = state.lastSyncAt,
+            lastSyncError = state.lastSyncError
         )
     }
 }
@@ -72,7 +77,11 @@ private fun NotesList(
     notes: List<Note>,
     onAdd: (String) -> Unit,
     onSelect: (Note) -> Unit,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    onSyncNow: () -> Unit,
+    syncInProgress: Boolean,
+    lastSyncAt: Long?,
+    lastSyncError: String?
 ) {
     var text by remember { mutableStateOf("") }
 
@@ -97,6 +106,17 @@ private fun NotesList(
             TextButton(onClick = onOpenSettings) {
                 Text("Settings")
             }
+            Spacer(modifier = Modifier.width(8.dp))
+            TextButton(onClick = onSyncNow, enabled = !syncInProgress) {
+                Text(if (syncInProgress) "Syncing..." else "Sync now")
+            }
+        }
+        if (lastSyncError != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Sync error: $lastSyncError", color = MaterialTheme.colorScheme.error)
+        } else if (lastSyncAt != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Last sync: $lastSyncAt")
         }
         Spacer(modifier = Modifier.height(16.dp))
         LazyColumn {

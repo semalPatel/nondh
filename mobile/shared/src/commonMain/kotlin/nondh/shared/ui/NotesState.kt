@@ -8,5 +8,8 @@ data class NotesState(
     val draftText: String = "",
     val showSettings: Boolean = false,
     val settingsBaseUrl: String = "",
-    val settingsToken: String = ""
+    val settingsToken: String = "",
+    val syncInProgress: Boolean = false,
+    val lastSyncAt: Long? = null,
+    val lastSyncError: String? = null
 )

@@ -29,7 +29,7 @@ fun NotesViewController(): UIViewController = ComposeUIViewController {
     )
 
     val scope = remember { MainScope() }
-    val syncRunner = remember { SyncRunner(scope) { viewModel.currentSyncManager() } }
+    val syncRunner = remember { SyncRunner(scope) { viewModel.syncNow() } }
 
     DisposableEffect(Unit) {
         onDispose { scope.cancel() }
@@ -75,6 +75,9 @@ fun NotesViewController(): UIViewController = ComposeUIViewController {
         onBack = {
             viewModel.closeEditor()
             refresh()
+        },
+        onSyncNow = {
+            syncRunner.trigger()
         },
         onOpenSettings = {
             viewModel.openSettings()

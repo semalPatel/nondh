@@ -51,4 +51,12 @@ class SqlDelightNotesDb(private val database: NondhDatabase) : NotesDb {
             )
         }
     }
+
+    override fun getSetting(key: String): String? {
+        return database.notesQueries.getSetting(key).executeAsOneOrNull()
+    }
+
+    override fun setSetting(key: String, value: String) {
+        database.notesQueries.setSetting(key, value)
+    }
 }
