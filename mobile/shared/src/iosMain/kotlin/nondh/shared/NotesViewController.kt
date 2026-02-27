@@ -8,6 +8,7 @@ import androidx.compose.ui.window.ComposeUIViewController
 import platform.UIKit.UIViewController
 import nondh.shared.ui.NotesScreen
 import nondh.shared.ui.NotesState
+import kotlin.system.getTimeMillis
 
 fun NotesViewController(): UIViewController = ComposeUIViewController {
     var state by remember { mutableStateOf(NotesState()) }
@@ -17,7 +18,7 @@ fun NotesViewController(): UIViewController = ComposeUIViewController {
                 id = "local-${state.notes.size}",
                 title = "",
                 body = body,
-                updatedAt = (platform.Foundation.NSDate().timeIntervalSince1970 * 1000).toLong()
+                updatedAt = getTimeMillis()
             )
         )
     })
