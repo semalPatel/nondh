@@ -8,7 +8,9 @@ import androidx.compose.ui.window.ComposeUIViewController
 import platform.UIKit.UIViewController
 import nondh.shared.ui.NotesScreen
 import nondh.shared.ui.NotesState
+import kotlin.system.getTimeMillis
 
+@Suppress("DEPRECATION")
 fun NotesViewController(): UIViewController = ComposeUIViewController {
     var state by remember { mutableStateOf(NotesState()) }
     NotesScreen(state = state, onAdd = { body ->
@@ -17,7 +19,7 @@ fun NotesViewController(): UIViewController = ComposeUIViewController {
                 id = "local-${state.notes.size}",
                 title = "",
                 body = body,
-                updatedAt = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
+                updatedAt = getTimeMillis()
             )
         )
     })
