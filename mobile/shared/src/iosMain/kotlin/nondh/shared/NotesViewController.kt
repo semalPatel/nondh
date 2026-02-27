@@ -98,6 +98,7 @@ fun NotesViewController(): UIViewController = ComposeUIViewController {
         onSaveSettings = {
             viewModel.saveSettings()
             refresh()
+            triggerSync()
         },
         onCloseSettings = {
             viewModel.closeSettings()

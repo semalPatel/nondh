@@ -101,6 +101,7 @@ class MainActivity : ComponentActivity() {
                 onSaveSettings = {
                     viewModel.saveSettings()
                     refresh()
+                    triggerSync()
                 },
                 onCloseSettings = {
                     viewModel.closeSettings()
