@@ -12,10 +12,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
-import nondh.shared.api.NotesApiClient
 import nondh.shared.db.DatabaseFactory
 import nondh.shared.db.SqlDelightNotesDb
-import nondh.shared.sync.SyncManager
 import nondh.shared.sync.SyncRunner
 import nondh.shared.ui.NotesScreen
 import nondh.shared.ui.NotesViewModel
@@ -25,12 +23,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val db = SqlDelightNotesDb(DatabaseFactory(this).create())
-        val api = NotesApiClient(
+        val viewModel = NotesViewModel(
+            db = db,
             baseUrl = "http://10.0.2.2:8080",
             token = "CHANGE_ME"
         )
-        val syncManager = SyncManager(db, api)
-        val syncRunner = SyncRunner(lifecycleScope, syncManager)
+        val syncRunner = SyncRunner(lifecycleScope) { viewModel.currentSyncManager() }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -43,7 +41,6 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val viewModel = NotesViewModel(db, syncManager)
             var state by remember { mutableStateOf(viewModel.state) }
 
             fun refresh() {
@@ -69,11 +66,31 @@ class MainActivity : ComponentActivity() {
                     refresh()
                 },
                 onDelete = {
-                    viewModel.deleteSelected()
+                    viewModel.deleteSelected(System.currentTimeMillis())
                     refresh()
                 },
                 onBack = {
                     viewModel.closeEditor()
+                    refresh()
+                },
+                onOpenSettings = {
+                    viewModel.openSettings()
+                    refresh()
+                },
+                onUpdateSettingsBaseUrl = { value ->
+                    viewModel.updateSettingsBaseUrl(value)
+                    refresh()
+                },
+                onUpdateSettingsToken = { value ->
+                    viewModel.updateSettingsToken(value)
+                    refresh()
+                },
+                onSaveSettings = {
+                    viewModel.saveSettings()
+                    refresh()
+                },
+                onCloseSettings = {
+                    viewModel.closeSettings()
                     refresh()
                 }
             )

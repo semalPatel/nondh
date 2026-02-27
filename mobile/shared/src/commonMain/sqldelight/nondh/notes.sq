@@ -2,7 +2,8 @@ CREATE TABLE notes (
   id TEXT NOT NULL PRIMARY KEY,
   title TEXT NOT NULL,
   body TEXT NOT NULL,
-  updated_at INTEGER NOT NULL
+  updated_at INTEGER NOT NULL,
+  deleted_at INTEGER
 );
 
 selectById:
@@ -11,9 +12,12 @@ SELECT * FROM notes WHERE id = ?;
 selectSince:
 SELECT * FROM notes WHERE updated_at > ? ORDER BY updated_at ASC;
 
+selectVisible:
+SELECT * FROM notes WHERE deleted_at IS NULL ORDER BY updated_at DESC;
+
 deleteById:
 DELETE FROM notes WHERE id = ?;
 
 upsert:
-INSERT OR REPLACE INTO notes(id, title, body, updated_at)
-VALUES (?, ?, ?, ?);
+INSERT OR REPLACE INTO notes(id, title, body, updated_at, deleted_at)
+VALUES (?, ?, ?, ?, ?);

@@ -33,9 +33,23 @@ fun NotesScreen(
     onUpdateDraft: (String) -> Unit,
     onSave: () -> Unit,
     onDelete: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onUpdateSettingsBaseUrl: (String) -> Unit,
+    onUpdateSettingsToken: (String) -> Unit,
+    onSaveSettings: () -> Unit,
+    onCloseSettings: () -> Unit
 ) {
-    if (state.selectedId != null) {
+    if (state.showSettings) {
+        SettingsScreen(
+            baseUrl = state.settingsBaseUrl,
+            token = state.settingsToken,
+            onUpdateBaseUrl = onUpdateSettingsBaseUrl,
+            onUpdateToken = onUpdateSettingsToken,
+            onSave = onSaveSettings,
+            onClose = onCloseSettings
+        )
+    } else if (state.selectedId != null) {
         NoteEditor(
             text = state.draftText,
             onUpdate = onUpdateDraft,
@@ -47,7 +61,8 @@ fun NotesScreen(
         NotesList(
             notes = state.notes,
             onAdd = onAdd,
-            onSelect = onSelect
+            onSelect = onSelect,
+            onOpenSettings = onOpenSettings
         )
     }
 }
@@ -56,7 +71,8 @@ fun NotesScreen(
 private fun NotesList(
     notes: List<Note>,
     onAdd: (String) -> Unit,
-    onSelect: (Note) -> Unit
+    onSelect: (Note) -> Unit,
+    onOpenSettings: () -> Unit
 ) {
     var text by remember { mutableStateOf("") }
 
@@ -77,6 +93,10 @@ private fun NotesList(
             }) {
                 Text("Add")
             }
+            Spacer(modifier = Modifier.width(8.dp))
+            TextButton(onClick = onOpenSettings) {
+                Text("Settings")
+            }
         }
         Spacer(modifier = Modifier.height(16.dp))
         LazyColumn {
@@ -94,6 +114,41 @@ private fun NotesList(
     }
 }
 
+@Composable
+private fun SettingsScreen(
+    baseUrl: String,
+    token: String,
+    onUpdateBaseUrl: (String) -> Unit,
+    onUpdateToken: (String) -> Unit,
+    onSave: () -> Unit,
+    onClose: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        TextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = baseUrl,
+            onValueChange = onUpdateBaseUrl,
+            placeholder = { Text("Base URL (e.g. http://192.168.1.10:8080)") }
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        TextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = token,
+            onValueChange = onUpdateToken,
+            placeholder = { Text("Token") }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Row {
+            Button(onClick = onSave) {
+                Text("Save")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            TextButton(onClick = onClose) {
+                Text("Cancel")
+            }
+        }
+    }
+}
 @Composable
 private fun NoteEditor(
     text: String,

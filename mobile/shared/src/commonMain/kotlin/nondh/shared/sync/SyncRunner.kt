@@ -8,18 +8,18 @@ import kotlinx.coroutines.launch
 
 class SyncRunner(
     private val scope: CoroutineScope,
-    private val manager: SyncManager
+    private val managerProvider: () -> SyncManager
 ) {
     fun trigger() {
         scope.launch {
-            manager.sync()
+            managerProvider().sync()
         }
     }
 
     fun schedule(intervalMillis: Long): Job {
         return scope.launch {
             while (isActive) {
-                manager.sync()
+                managerProvider().sync()
                 delay(intervalMillis)
             }
         }

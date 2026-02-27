@@ -7,6 +7,7 @@ interface NotesDb {
     fun get(id: String): Note?
     fun since(ts: Long): List<Note>
     fun delete(id: String)
+    fun listVisible(): List<Note>
 }
 
 class InMemoryNotesDb : NotesDb {
@@ -24,4 +25,7 @@ class InMemoryNotesDb : NotesDb {
     override fun delete(id: String) {
         data.remove(id)
     }
+
+    override fun listVisible(): List<Note> =
+        data.values.filter { it.deletedAt == null }.sortedBy { it.updatedAt }
 }

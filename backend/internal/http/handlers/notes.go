@@ -19,6 +19,7 @@ type notePayload struct {
     Title     string `json:"title"`
     Body      string `json:"body"`
     UpdatedAt int64  `json:"updated_at"`
+    DeletedAt *int64 `json:"deleted_at,omitempty"`
 }
 
 func NewNotesHandler(db *store.DB) *NotesHandler {
@@ -31,7 +32,12 @@ func (h *NotesHandler) Upsert(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "bad json", http.StatusBadRequest)
         return
     }
-    n := model.Note{ID: p.ID, Title: p.Title, Body: p.Body, UpdatedAt: time.UnixMilli(p.UpdatedAt).UTC()}
+    var deleted *time.Time
+    if p.DeletedAt != nil {
+        v := time.UnixMilli(*p.DeletedAt).UTC()
+        deleted = &v
+    }
+    n := model.Note{ID: p.ID, Title: p.Title, Body: p.Body, UpdatedAt: time.UnixMilli(p.UpdatedAt).UTC(), DeletedAt: deleted}
     if err := h.db.UpsertNote(n); err != nil {
         http.Error(w, "store error", http.StatusInternalServerError)
         return
@@ -49,7 +55,12 @@ func (h *NotesHandler) List(w http.ResponseWriter, r *http.Request) {
     }
     var out []notePayload
     for _, n := range notes {
-        out = append(out, notePayload{ID: n.ID, Title: n.Title, Body: n.Body, UpdatedAt: n.UpdatedAt.UnixMilli()})
+        var deleted *int64
+        if n.DeletedAt != nil {
+            v := n.DeletedAt.UnixMilli()
+            deleted = &v
+        }
+        out = append(out, notePayload{ID: n.ID, Title: n.Title, Body: n.Body, UpdatedAt: n.UpdatedAt.UnixMilli(), DeletedAt: deleted})
     }
     _ = json.NewEncoder(w).Encode(out)
 }

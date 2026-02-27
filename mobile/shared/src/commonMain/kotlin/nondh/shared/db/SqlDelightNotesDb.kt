@@ -8,7 +8,8 @@ class SqlDelightNotesDb(private val database: NondhDatabase) : NotesDb {
             id = note.id,
             title = note.title,
             body = note.body,
-            updated_at = note.updatedAt
+            updated_at = note.updatedAt,
+            deleted_at = note.deletedAt
         )
     }
 
@@ -18,7 +19,8 @@ class SqlDelightNotesDb(private val database: NondhDatabase) : NotesDb {
             id = row.id,
             title = row.title,
             body = row.body,
-            updatedAt = row.updated_at
+            updatedAt = row.updated_at,
+            deletedAt = row.deleted_at
         )
     }
 
@@ -28,12 +30,25 @@ class SqlDelightNotesDb(private val database: NondhDatabase) : NotesDb {
                 id = row.id,
                 title = row.title,
                 body = row.body,
-                updatedAt = row.updated_at
+                updatedAt = row.updated_at,
+                deletedAt = row.deleted_at
             )
         }
     }
 
     override fun delete(id: String) {
         database.notesQueries.deleteById(id)
+    }
+
+    override fun listVisible(): List<Note> {
+        return database.notesQueries.selectVisible().executeAsList().map { row ->
+            Note(
+                id = row.id,
+                title = row.title,
+                body = row.body,
+                updatedAt = row.updated_at,
+                deletedAt = row.deleted_at
+            )
+        }
     }
 }

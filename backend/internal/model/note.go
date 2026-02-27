@@ -7,4 +7,5 @@ type Note struct {
     Title     string
     Body      string
     UpdatedAt time.Time
+    DeletedAt *time.Time
 }

@@ -17,11 +17,15 @@ func Open(path string) (*DB, error) {
             id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
             body TEXT NOT NULL,
-            updated_at INTEGER NOT NULL
+            updated_at INTEGER NOT NULL,
+            deleted_at INTEGER
         )
     `); err != nil {
         _ = db.Close()
         return nil, err
+    }
+    if _, err := db.Exec(`ALTER TABLE notes ADD COLUMN deleted_at INTEGER`); err != nil {
+        // ignore if column already exists
     }
     return &DB{db: db}, nil
 }

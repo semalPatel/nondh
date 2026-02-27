@@ -18,8 +18,11 @@ class SyncManager(
         queue.enqueue(note)
     }
 
-    fun deleteLocal(id: String) {
-        db.delete(id)
+    fun deleteLocal(id: String, deletedAt: Long) {
+        val existing = db.get(id) ?: return
+        val tombstone = existing.copy(deletedAt = deletedAt, updatedAt = deletedAt)
+        db.upsert(tombstone)
+        queue.enqueue(tombstone)
     }
 
     suspend fun sync() {

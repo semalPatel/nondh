@@ -12,10 +12,8 @@ import androidx.compose.ui.window.ComposeUIViewController
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import nondh.shared.api.NotesApiClient
 import nondh.shared.db.DatabaseFactory
 import nondh.shared.db.SqlDelightNotesDb
-import nondh.shared.sync.SyncManager
 import nondh.shared.sync.SyncRunner
 import nondh.shared.ui.NotesScreen
 import nondh.shared.ui.NotesViewModel
@@ -24,14 +22,14 @@ import platform.posix.time
 
 fun NotesViewController(): UIViewController = ComposeUIViewController {
     val db = SqlDelightNotesDb(DatabaseFactory().create())
-    val api = NotesApiClient(
+    val viewModel = NotesViewModel(
+        db = db,
         baseUrl = "http://127.0.0.1:8080",
         token = "CHANGE_ME"
     )
-    val syncManager = SyncManager(db, api)
 
     val scope = remember { MainScope() }
-    val syncRunner = remember { SyncRunner(scope, syncManager) }
+    val syncRunner = remember { SyncRunner(scope) { viewModel.currentSyncManager() } }
 
     DisposableEffect(Unit) {
         onDispose { scope.cancel() }
@@ -44,7 +42,6 @@ fun NotesViewController(): UIViewController = ComposeUIViewController {
         }
     }
 
-    val viewModel = remember { NotesViewModel(db, syncManager) }
     var state by remember { mutableStateOf(viewModel.state) }
 
     fun refresh() {
@@ -72,11 +69,31 @@ fun NotesViewController(): UIViewController = ComposeUIViewController {
             refresh()
         },
         onDelete = {
-            viewModel.deleteSelected()
+            viewModel.deleteSelected(nowMillis())
             refresh()
         },
         onBack = {
             viewModel.closeEditor()
+            refresh()
+        },
+        onOpenSettings = {
+            viewModel.openSettings()
+            refresh()
+        },
+        onUpdateSettingsBaseUrl = { value ->
+            viewModel.updateSettingsBaseUrl(value)
+            refresh()
+        },
+        onUpdateSettingsToken = { value ->
+            viewModel.updateSettingsToken(value)
+            refresh()
+        },
+        onSaveSettings = {
+            viewModel.saveSettings()
+            refresh()
+        },
+        onCloseSettings = {
+            viewModel.closeSettings()
             refresh()
         }
     )
