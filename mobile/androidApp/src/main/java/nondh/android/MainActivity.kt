@@ -26,7 +26,9 @@ class MainActivity : ComponentActivity() {
         val viewModel = NotesViewModel(
             db = db,
             baseUrl = "http://10.0.2.2:8080",
-            token = "CHANGE_ME"
+            token = "CHANGE_ME",
+            scope = lifecycleScope,
+            nowMillis = { System.currentTimeMillis() }
         )
         val syncRunner = SyncRunner(lifecycleScope) { viewModel.syncNow() }
 
@@ -56,11 +58,6 @@ class MainActivity : ComponentActivity() {
 
             NotesScreen(
                 state = state,
-                onAdd = { body ->
-                    viewModel.addNote(body, System.currentTimeMillis())
-                    refresh()
-                    triggerSync()
-                },
                 onSelect = { note ->
                     viewModel.selectNote(note)
                     refresh()
@@ -85,6 +82,10 @@ class MainActivity : ComponentActivity() {
                 },
                 onSyncNow = {
                     triggerSync()
+                },
+                onNewNote = {
+                    viewModel.newNote()
+                    refresh()
                 },
                 onOpenSettings = {
                     viewModel.openSettings()

@@ -22,13 +22,14 @@ import platform.posix.time
 
 fun NotesViewController(): UIViewController = ComposeUIViewController {
     val db = SqlDelightNotesDb(DatabaseFactory().create())
+    val scope = remember { MainScope() }
     val viewModel = NotesViewModel(
         db = db,
         baseUrl = "http://127.0.0.1:8080",
-        token = "CHANGE_ME"
+        token = "CHANGE_ME",
+        scope = scope,
+        nowMillis = { time(null) * 1000L }
     )
-
-    val scope = remember { MainScope() }
     val syncRunner = remember { SyncRunner(scope) { viewModel.syncNow() } }
 
     DisposableEffect(Unit) {
@@ -48,18 +49,12 @@ fun NotesViewController(): UIViewController = ComposeUIViewController {
         state = viewModel.state
     }
 
-    fun nowMillis(): Long = time(null) * 1000L
     fun triggerSync() {
         syncRunner.trigger()
     }
 
     NotesScreen(
         state = state,
-        onAdd = { body ->
-            viewModel.addNote(body, nowMillis())
-            refresh()
-            triggerSync()
-        },
         onSelect = { note ->
             viewModel.selectNote(note)
             refresh()
@@ -69,12 +64,12 @@ fun NotesViewController(): UIViewController = ComposeUIViewController {
             refresh()
         },
         onSave = {
-            viewModel.saveDraft(nowMillis())
+            viewModel.saveDraft(time(null) * 1000L)
             refresh()
             triggerSync()
         },
         onDelete = {
-            viewModel.deleteSelected(nowMillis())
+            viewModel.deleteSelected(time(null) * 1000L)
             refresh()
             triggerSync()
         },
@@ -83,6 +78,10 @@ fun NotesViewController(): UIViewController = ComposeUIViewController {
             refresh()
         },
         onSyncNow = { triggerSync() },
+        onNewNote = {
+            viewModel.newNote()
+            refresh()
+        },
         onOpenSettings = {
             viewModel.openSettings()
             refresh()

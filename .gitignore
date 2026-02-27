@@ -8,3 +8,7 @@ mobile/build/
 mobile/shared/build/
 mobile/androidApp/build/
 *.hprof
+.idea/
+mobile/.idea/
+mobile/.kotlin/
+mobile/local.properties

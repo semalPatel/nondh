@@ -2,6 +2,10 @@ package nondh.shared.ui
 
 import nondh.shared.Note
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import nondh.shared.api.NotesApiClient
 import nondh.shared.db.NotesDb
 import nondh.shared.sync.SyncManager
@@ -9,11 +13,14 @@ import nondh.shared.sync.SyncManager
 class NotesViewModel(
     private val db: NotesDb,
     baseUrl: String,
-    token: String
+    token: String,
+    private val scope: CoroutineScope,
+    private val nowMillis: () -> Long
 ) {
     private var sync: SyncManager
     var state: NotesState
         private set
+    private var debounceJob: Job? = null
 
     init {
         val savedBaseUrl = db.getSetting("base_url") ?: baseUrl
@@ -32,10 +39,10 @@ class NotesViewModel(
     fun currentSyncManager(): SyncManager = sync
 
     fun addNote(body: String, updatedAt: Long) {
-        val id = "local-${state.notes.size + 1}"
+        val id = "local-${updatedAt}"
         val note = Note(id = id, title = "", body = body, updatedAt = updatedAt, deletedAt = null)
         sync.enqueueLocal(note)
-        state = state.copy(notes = db.listVisible(), selectedId = null, draftText = "")
+        state = state.copy(notes = db.listVisible(), selectedId = id, draftText = body)
     }
 
     fun selectNote(note: Note) {
@@ -44,6 +51,11 @@ class NotesViewModel(
 
     fun updateDraft(text: String) {
         state = state.copy(draftText = text)
+        debounceJob?.cancel()
+        debounceJob = scope.launch {
+            delay(800)
+            autoSaveDraft()
+        }
     }
 
     fun saveDraft(updatedAt: Long) {
@@ -61,6 +73,10 @@ class NotesViewModel(
     }
 
     fun closeEditor() {
+        state = state.copy(selectedId = null, draftText = "")
+    }
+
+    fun newNote() {
         state = state.copy(selectedId = null, draftText = "")
     }
 
@@ -95,5 +111,23 @@ class NotesViewModel(
             lastSyncError = sync.status.lastError,
             notes = db.listVisible()
         )
+    }
+
+    private fun autoSaveDraft() {
+        val text = state.draftText.trim()
+        if (text.isBlank()) return
+
+        val now = nowMillis()
+        val id = state.selectedId
+        if (id == null) {
+            addNote(text, now)
+        } else {
+            val existing = db.get(id) ?: return
+            val updated = existing.copy(body = text, updatedAt = now, deletedAt = null)
+            sync.enqueueLocal(updated)
+            state = state.copy(notes = db.listVisible())
+        }
+
+        scope.launch { syncNow() }
     }
 }
