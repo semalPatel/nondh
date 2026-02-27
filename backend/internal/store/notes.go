@@ -16,7 +16,7 @@ func (d *DB) UpsertNote(n Note) error {
             title=excluded.title,
             body=excluded.body,
             updated_at=excluded.updated_at
-    `, n.ID, n.Title, n.Body, n.UpdatedAt.Unix())
+    `, n.ID, n.Title, n.Body, n.UpdatedAt.UnixMilli())
     return err
 }
 
@@ -28,12 +28,12 @@ func (d *DB) GetNote(id string) (Note, error) {
     if err != nil {
         return Note{}, err
     }
-    n.UpdatedAt = time.Unix(ts, 0).UTC()
+    n.UpdatedAt = time.UnixMilli(ts).UTC()
     return n, nil
 }
 
 func (d *DB) NotesSince(ts time.Time) ([]Note, error) {
-    rows, err := d.db.Query(`SELECT id, title, body, updated_at FROM notes WHERE updated_at > ? ORDER BY updated_at ASC`, ts.Unix())
+    rows, err := d.db.Query(`SELECT id, title, body, updated_at FROM notes WHERE updated_at > ? ORDER BY updated_at ASC`, ts.UnixMilli())
     if err != nil {
         return nil, err
     }
@@ -46,7 +46,7 @@ func (d *DB) NotesSince(ts time.Time) ([]Note, error) {
         if err := rows.Scan(&n.ID, &n.Title, &n.Body, &tsv); err != nil {
             return nil, err
         }
-        n.UpdatedAt = time.Unix(tsv, 0).UTC()
+        n.UpdatedAt = time.UnixMilli(tsv).UTC()
         out = append(out, n)
     }
     return out, rows.Err()

@@ -24,11 +24,25 @@ kotlin {
                 implementation("org.jetbrains.compose.runtime:runtime:1.10.1")
                 implementation("org.jetbrains.compose.foundation:foundation:1.10.1")
                 implementation("org.jetbrains.compose.material3:material3:1.10.0-alpha05")
+                implementation("io.ktor:ktor-client-core:3.1.0")
+                implementation("io.ktor:ktor-client-content-negotiation:3.1.0")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:3.1.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
             }
         }
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
+            }
+        }
+        val androidMain by getting {
+            dependencies {
+                implementation("io.ktor:ktor-client-okhttp:3.1.0")
+            }
+        }
+        val iosMain by getting {
+            dependencies {
+                implementation("io.ktor:ktor-client-darwin:3.1.0")
             }
         }
     }

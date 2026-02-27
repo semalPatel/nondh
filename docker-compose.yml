@@ -1,0 +1,11 @@
+services:
+  nondh:
+    build:
+      context: ./backend
+    environment:
+      NONDH_TOKEN: ${NONDH_TOKEN}
+      NONDH_DB_PATH: /data/nondh.db
+    ports:
+      - "${NONDH_PORT:-8080}:8080"
+    volumes:
+      - ./data:/data

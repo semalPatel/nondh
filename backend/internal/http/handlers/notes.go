@@ -31,7 +31,7 @@ func (h *NotesHandler) Upsert(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "bad json", http.StatusBadRequest)
         return
     }
-    n := model.Note{ID: p.ID, Title: p.Title, Body: p.Body, UpdatedAt: time.Unix(p.UpdatedAt, 0).UTC()}
+    n := model.Note{ID: p.ID, Title: p.Title, Body: p.Body, UpdatedAt: time.UnixMilli(p.UpdatedAt).UTC()}
     if err := h.db.UpsertNote(n); err != nil {
         http.Error(w, "store error", http.StatusInternalServerError)
         return
@@ -42,14 +42,14 @@ func (h *NotesHandler) Upsert(w http.ResponseWriter, r *http.Request) {
 func (h *NotesHandler) List(w http.ResponseWriter, r *http.Request) {
     sinceStr := r.URL.Query().Get("since")
     since, _ := strconv.ParseInt(sinceStr, 10, 64)
-    notes, err := h.db.NotesSince(time.Unix(since, 0).UTC())
+    notes, err := h.db.NotesSince(time.UnixMilli(since).UTC())
     if err != nil {
         http.Error(w, "store error", http.StatusInternalServerError)
         return
     }
     var out []notePayload
     for _, n := range notes {
-        out = append(out, notePayload{ID: n.ID, Title: n.Title, Body: n.Body, UpdatedAt: n.UpdatedAt.Unix()})
+        out = append(out, notePayload{ID: n.ID, Title: n.Title, Body: n.Body, UpdatedAt: n.UpdatedAt.UnixMilli()})
     }
     _ = json.NewEncoder(w).Encode(out)
 }

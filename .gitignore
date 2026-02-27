@@ -1,1 +1,10 @@
 .worktrees
+.env
+.env.*
+!.env.example
+/data
+mobile/.gradle/
+mobile/build/
+mobile/shared/build/
+mobile/androidApp/build/
+*.hprof

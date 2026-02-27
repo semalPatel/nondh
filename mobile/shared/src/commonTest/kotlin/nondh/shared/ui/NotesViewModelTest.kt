@@ -8,7 +8,7 @@ class NotesViewModelTest {
     @Test
     fun addNoteAddsToList() {
         val vm = NotesViewModel()
-        vm.addNote(Note("n1", "", "hello", 1000))
+        vm.addNote("hello", 1000)
         assertEquals(1, vm.state.notes.size)
     }
 }
