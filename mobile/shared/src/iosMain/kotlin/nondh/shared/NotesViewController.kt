@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package nondh.shared
 
 import androidx.compose.runtime.mutableStateOf
