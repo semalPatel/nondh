@@ -1,4 +1,4 @@
-package handlers
+package handlers_test
 
 import (
     "bytes"
@@ -9,6 +9,7 @@ import (
     "time"
 
     apphttp "nondh/internal/http"
+    "nondh/internal/http/handlers"
     "nondh/internal/store"
 )
 
@@ -23,7 +24,7 @@ func TestUpsertAndListNotes(t *testing.T) {
     db, cleanup := store.MustTestDB(t)
     defer cleanup()
 
-    h := NewNotesHandler(db)
+    h := handlers.NewNotesHandler(db)
     router := apphttp.RouterWithNotes(h)
 
     payload := notePayload{ID: "n1", Title: "", Body: "hello", UpdatedAt: time.Now().Unix()}
