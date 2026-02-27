@@ -13,12 +13,18 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
 
+    androidLibrary {
+        namespace = "nondh.shared"
+        compileSdk = 36
+        minSdk = 26
+    }
+
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(compose.runtime)
-                implementation(compose.foundation)
-                implementation(compose.material3)
+                implementation("org.jetbrains.compose.runtime:runtime:1.10.1")
+                implementation("org.jetbrains.compose.foundation:foundation:1.10.1")
+                implementation("org.jetbrains.compose.material3:material3:1.10.0-alpha05")
             }
         }
         val commonTest by getting {
@@ -26,14 +32,6 @@ kotlin {
                 implementation(kotlin("test"))
             }
         }
-    }
-}
-
-android {
-    namespace = "nondh.shared"
-    compileSdk = 36
-    defaultConfig {
-        minSdk = 26
     }
 }
 
