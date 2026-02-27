@@ -55,6 +55,8 @@ sqldelight {
     databases {
         create("NondhDatabase") {
             packageName.set("nondh.shared.db")
+            srcDirs.from("src/commonMain/sqldelight")
         }
     }
+    linkSqlite.set(true)
 }
