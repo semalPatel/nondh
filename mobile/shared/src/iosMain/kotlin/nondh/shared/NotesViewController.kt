@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
+
 package nondh.shared
 
 import androidx.compose.runtime.mutableStateOf
