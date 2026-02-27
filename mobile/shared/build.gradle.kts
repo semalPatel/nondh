@@ -3,6 +3,7 @@ plugins {
     kotlin("plugin.serialization") version "2.2.20"
     id("org.jetbrains.compose") version "1.9.2"
     id("com.android.library") version "9.0.1"
+    id("app.cash.sqldelight") version "2.2.1"
 }
 
 kotlin {
@@ -32,5 +33,14 @@ android {
     compileSdk = 36
     defaultConfig {
         minSdk = 26
+    }
+}
+
+sqldelight {
+    databases {
+        create("NondhDatabase") {
+            packageName.set("nondh.shared.db")
+            sourceFolders.set(listOf("sqldelight"))
+        }
     }
 }
