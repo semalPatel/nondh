@@ -39,7 +39,7 @@ sqldelight {
     databases {
         create("NondhDatabase") {
             packageName.set("nondh.shared.db")
-            sourceFolders.set(listOf("sqldelight"))
+            sourceFolders("sqldelight")
         }
     }
 }
