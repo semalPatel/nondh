@@ -36,6 +36,7 @@ kotlin {
                 implementation("org.jetbrains.compose.runtime:runtime:1.10.1")
                 implementation("org.jetbrains.compose.foundation:foundation:1.10.1")
                 implementation("org.jetbrains.compose.material3:material3:1.10.0-alpha05")
+                implementation(compose.materialIconsExtended)
                 implementation("io.ktor:ktor-client-core:3.1.0")
                 implementation("io.ktor:ktor-client-content-negotiation:3.1.0")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:3.1.0")
