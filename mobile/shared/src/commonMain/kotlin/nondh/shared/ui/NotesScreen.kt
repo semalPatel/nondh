@@ -14,17 +14,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.Surface
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,8 +32,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import nondh.shared.Note
 import nondh.shared.ui.theme.NondhTheme
 import nondh.shared.ui.theme.WarmOnSurfaceVariant
@@ -127,24 +130,25 @@ private fun EditorOnlyScaffold(
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            NotesDrawer(
-                notes = state.notes,
-                onSelect = { note ->
-                    onSelect(note)
-                    scope.launch { drawerState.close() }
-                },
-                onNewNote = {
-                    onNewNote()
-                    scope.launch { drawerState.close() }
-                }
-            )
+            Surface(color = WarmSurface, modifier = Modifier.fillMaxSize()) {
+                NotesDrawer(
+                    notes = state.notes,
+                    onSelect = { note ->
+                        onSelect(note)
+                        scope.launch { drawerState.close() }
+                    },
+                    onNewNote = {
+                        onNewNote()
+                        scope.launch { drawerState.close() }
+                    }
+                )
+            }
         }
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             EditorContent(
                 text = state.draftText,
                 onUpdate = onUpdateDraft,
-                onOpenDrawer = { scope.launch { drawerState.open() } },
                 onSyncNow = onSyncNow,
                 syncInProgress = state.syncInProgress,
                 lastSyncAt = state.lastSyncAt,
@@ -164,23 +168,22 @@ private fun EditorOnlyScaffold(
         }
     }
 
-    if (showActions) {
-        ActionsSheet(
-            onNewNote = {
-                onNewNote()
-                showActions = false
-            },
-            onSyncNow = {
-                onSyncNow()
-                showActions = false
-            },
-            onOpenSettings = {
-                onOpenSettings()
-                showActions = false
-            },
-            onDismiss = { showActions = false }
-        )
-    }
+    SpeedDial(
+        expanded = showActions,
+        onDismiss = { showActions = false },
+        onNewNote = {
+            onNewNote()
+            showActions = false
+        },
+        onSyncNow = {
+            onSyncNow()
+            showActions = false
+        },
+        onOpenSettings = {
+            onOpenSettings()
+            showActions = false
+        }
+    )
 }
 
 @Composable
@@ -225,31 +228,21 @@ private fun NotesDrawer(
 private fun EditorContent(
     text: String,
     onUpdate: (String) -> Unit,
-    onOpenDrawer: () -> Unit,
     onSyncNow: () -> Unit,
     syncInProgress: Boolean,
     lastSyncAt: Long?,
     lastSyncError: String?
 ) {
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TextButton(onClick = onOpenDrawer) { Text("Menu") }
-            TextButton(onClick = onSyncNow, enabled = !syncInProgress) {
-                Text(if (syncInProgress) "Syncing..." else "Sync now")
-            }
-        }
+    var showToast by remember { mutableStateOf(false) }
+    LaunchedEffect(lastSyncError) {
         if (lastSyncError != null) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Sync error: $lastSyncError", color = MaterialTheme.colorScheme.error)
-        } else if (lastSyncAt != null) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Last sync: $lastSyncAt", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            showToast = true
+            delay(3000)
+            showToast = false
         }
-        Spacer(modifier = Modifier.height(16.dp))
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
         TextField(
             modifier = Modifier.fillMaxSize(),
             value = text,
@@ -266,28 +259,80 @@ private fun EditorContent(
                 unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                 focusedPlaceholderColor = WarmOnSurfaceVariant,
                 unfocusedPlaceholderColor = WarmOnSurfaceVariant
+            ),
+            textStyle = TextStyle(
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 14.sp
             )
         )
+
+        if (showToast) {
+            Surface(
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = lastSyncError ?: "Sync error",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                )
+            }
+        }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ActionsSheet(
+private fun SpeedDial(
+    expanded: Boolean,
+    onDismiss: () -> Unit,
     onNewNote: () -> Unit,
     onSyncNow: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onDismiss: () -> Unit
+    onOpenSettings: () -> Unit
 ) {
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            Button(onClick = onNewNote, modifier = Modifier.fillMaxWidth()) { Text("New note") }
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = onSyncNow, modifier = Modifier.fillMaxWidth()) { Text("Sync now") }
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = onOpenSettings, modifier = Modifier.fillMaxWidth()) { Text("Settings") }
-            Spacer(modifier = Modifier.height(8.dp))
-            TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text("Close") }
+    if (!expanded) return
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable { onDismiss() }
+        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 88.dp),
+            horizontalAlignment = Alignment.End
+        ) {
+            SpeedDialItem("New", onNewNote)
+            Spacer(modifier = Modifier.height(12.dp))
+            SpeedDialItem("Sync", onSyncNow)
+            Spacer(modifier = Modifier.height(12.dp))
+            SpeedDialItem("Settings", onOpenSettings)
+        }
+    }
+}
+
+@Composable
+private fun SpeedDialItem(label: String, onClick: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Surface(
+            color = WarmSurface,
+            modifier = Modifier.padding(end = 8.dp)
+        ) {
+            Text(
+                text = label,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            )
+        }
+        FloatingActionButton(
+            onClick = onClick,
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        ) {
+            Text(label.take(1))
         }
     }
 }
