@@ -19,6 +19,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -34,6 +35,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import nondh.shared.Note
+import nondh.shared.ui.theme.NondhTheme
+import nondh.shared.ui.theme.WarmOnSurfaceVariant
+import nondh.shared.ui.theme.WarmSurface
 
 @Composable
 fun NotesScreen(
@@ -48,24 +52,26 @@ fun NotesScreen(
     onSyncNow: () -> Unit,
     onNewNote: () -> Unit
 ) {
-    if (state.showSettings) {
-        SettingsScreen(
-            baseUrl = state.settingsBaseUrl,
-            token = state.settingsToken,
-            onUpdateBaseUrl = onUpdateSettingsBaseUrl,
-            onUpdateToken = onUpdateSettingsToken,
-            onSave = onSaveSettings,
-            onClose = onCloseSettings
-        )
-    } else {
-        EditorOnlyScaffold(
-            state = state,
-            onUpdateDraft = onUpdateDraft,
-            onSelect = onSelect,
-            onSyncNow = onSyncNow,
-            onOpenSettings = onOpenSettings,
-            onNewNote = onNewNote
-        )
+    NondhTheme {
+        if (state.showSettings) {
+            SettingsScreen(
+                baseUrl = state.settingsBaseUrl,
+                token = state.settingsToken,
+                onUpdateBaseUrl = onUpdateSettingsBaseUrl,
+                onUpdateToken = onUpdateSettingsToken,
+                onSave = onSaveSettings,
+                onClose = onCloseSettings
+            )
+        } else {
+            EditorOnlyScaffold(
+                state = state,
+                onUpdateDraft = onUpdateDraft,
+                onSelect = onSelect,
+                onSyncNow = onSyncNow,
+                onOpenSettings = onOpenSettings,
+                onNewNote = onNewNote
+            )
+        }
     }
 }
 
@@ -149,7 +155,9 @@ private fun EditorOnlyScaffold(
                 onClick = { showActions = true },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(16.dp)
+                    .padding(16.dp),
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
                 Text("+")
             }
@@ -201,6 +209,12 @@ private fun NotesDrawer(
                         .padding(vertical = 8.dp)
                 ) {
                     Text(note.body.take(120), style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "${note.updatedAt}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }
@@ -233,14 +247,26 @@ private fun EditorContent(
             Text("Sync error: $lastSyncError", color = MaterialTheme.colorScheme.error)
         } else if (lastSyncAt != null) {
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Last sync: $lastSyncAt")
+            Text("Last sync: $lastSyncAt", color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Spacer(modifier = Modifier.height(16.dp))
         TextField(
             modifier = Modifier.fillMaxSize(),
             value = text,
             onValueChange = onUpdate,
-            placeholder = { Text("Start writing...") }
+            placeholder = { Text("Start writing...") },
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = WarmSurface,
+                unfocusedContainerColor = WarmSurface,
+                disabledContainerColor = WarmSurface,
+                focusedIndicatorColor = WarmSurface,
+                unfocusedIndicatorColor = WarmSurface,
+                cursorColor = MaterialTheme.colorScheme.primary,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                focusedPlaceholderColor = WarmOnSurfaceVariant,
+                unfocusedPlaceholderColor = WarmOnSurfaceVariant
+            )
         )
     }
 }
