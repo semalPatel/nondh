@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
@@ -50,8 +49,6 @@ import nondh.shared.Note
 import nondh.shared.ui.theme.NondhTheme
 import nondh.shared.ui.theme.WarmOnSurfaceVariant
 import nondh.shared.ui.theme.WarmSurface
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
 
 @Composable
 fun NotesScreen(
@@ -310,10 +307,10 @@ private fun EditorContent(
                     .padding(12.dp)
             ) {
                 IconButton(onClick = onOpenDrawer) {
-                    Icon(
-                        imageVector = Icons.Default.Menu,
-                        contentDescription = "Menu",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    Text(
+                        text = "≡",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
