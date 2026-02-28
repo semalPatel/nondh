@@ -63,20 +63,6 @@ fun NotesViewController(): UIViewController = ComposeUIViewController {
             viewModel.updateDraft(text)
             refresh()
         },
-        onSave = {
-            viewModel.saveDraft(time(null) * 1000L)
-            refresh()
-            triggerSync()
-        },
-        onDelete = {
-            viewModel.deleteSelected(time(null) * 1000L)
-            refresh()
-            triggerSync()
-        },
-        onBack = {
-            viewModel.closeEditor()
-            refresh()
-        },
         onSyncNow = { triggerSync() },
         onNewNote = {
             viewModel.newNote()

@@ -66,20 +66,6 @@ class MainActivity : ComponentActivity() {
                     viewModel.updateDraft(text)
                     refresh()
                 },
-                onSave = {
-                    viewModel.saveDraft(System.currentTimeMillis())
-                    refresh()
-                    triggerSync()
-                },
-                onDelete = {
-                    viewModel.deleteSelected(System.currentTimeMillis())
-                    refresh()
-                    triggerSync()
-                },
-                onBack = {
-                    viewModel.closeEditor()
-                    refresh()
-                },
                 onSyncNow = {
                     triggerSync()
                 },

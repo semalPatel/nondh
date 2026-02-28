@@ -17,19 +17,22 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import nondh.shared.Note
 
 @Composable
@@ -37,9 +40,6 @@ fun NotesScreen(
     state: NotesState,
     onSelect: (Note) -> Unit,
     onUpdateDraft: (String) -> Unit,
-    onSave: () -> Unit,
-    onDelete: () -> Unit,
-    onBack: () -> Unit,
     onOpenSettings: () -> Unit,
     onUpdateSettingsBaseUrl: (String) -> Unit,
     onUpdateSettingsToken: (String) -> Unit,
@@ -57,25 +57,10 @@ fun NotesScreen(
             onSave = onSaveSettings,
             onClose = onCloseSettings
         )
-    } else if (state.selectedId != null) {
-        EditorScaffold(
-            state = state,
-            onUpdateDraft = onUpdateDraft,
-            onSave = onSave,
-            onDelete = onDelete,
-            onBack = onBack,
-            onSelect = onSelect,
-            onSyncNow = onSyncNow,
-            onOpenSettings = onOpenSettings,
-            onNewNote = onNewNote
-        )
     } else {
-        EditorScaffold(
+        EditorOnlyScaffold(
             state = state,
             onUpdateDraft = onUpdateDraft,
-            onSave = onSave,
-            onDelete = onDelete,
-            onBack = onBack,
             onSelect = onSelect,
             onSyncNow = onSyncNow,
             onOpenSettings = onOpenSettings,
@@ -120,64 +105,83 @@ private fun SettingsScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EditorScaffold(
+private fun EditorOnlyScaffold(
     state: NotesState,
     onUpdateDraft: (String) -> Unit,
-    onSave: () -> Unit,
-    onDelete: () -> Unit,
-    onBack: () -> Unit,
     onSelect: (Note) -> Unit,
     onSyncNow: () -> Unit,
     onOpenSettings: () -> Unit,
     onNewNote: () -> Unit
 ) {
-    val sheetState = rememberBottomSheetScaffoldState()
+    val drawerState = rememberDrawerState(initialValue = androidx.compose.material3.DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    var showActions by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        BottomSheetScaffold(
-            scaffoldState = sheetState,
-            sheetPeekHeight = 72.dp,
-            sheetContent = {
-                NotesSheet(
-                    notes = state.notes,
-                    onSelect = onSelect,
-                    onNewNote = onNewNote
-                )
-            }
-        ) { padding ->
-            NoteEditor(
-                modifier = Modifier.padding(padding),
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            NotesDrawer(
+                notes = state.notes,
+                onSelect = { note ->
+                    onSelect(note)
+                    scope.launch { drawerState.close() }
+                },
+                onNewNote = {
+                    onNewNote()
+                    scope.launch { drawerState.close() }
+                }
+            )
+        }
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            EditorContent(
                 text = state.draftText,
                 onUpdate = onUpdateDraft,
-                onSave = onSave,
-                onDelete = onDelete,
-                onBack = onBack,
+                onOpenDrawer = { scope.launch { drawerState.open() } },
                 onSyncNow = onSyncNow,
                 syncInProgress = state.syncInProgress,
                 lastSyncAt = state.lastSyncAt,
                 lastSyncError = state.lastSyncError
             )
-        }
 
-        FloatingActionButton(
-            onClick = onOpenSettings,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            Text("Set")
+            FloatingActionButton(
+                onClick = { showActions = true },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+            ) {
+                Text("+")
+            }
         }
     }
+
+    if (showActions) {
+        ActionsSheet(
+            onNewNote = {
+                onNewNote()
+                showActions = false
+            },
+            onSyncNow = {
+                onSyncNow()
+                showActions = false
+            },
+            onOpenSettings = {
+                onOpenSettings()
+                showActions = false
+            },
+            onDismiss = { showActions = false }
+        )
+    }
 }
+
 @Composable
-private fun NotesSheet(
+private fun NotesDrawer(
     notes: List<Note>,
     onSelect: (Note) -> Unit,
     onNewNote: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -204,31 +208,22 @@ private fun NotesSheet(
 }
 
 @Composable
-private fun NoteEditor(
-    modifier: Modifier = Modifier,
+private fun EditorContent(
     text: String,
     onUpdate: (String) -> Unit,
-    onSave: () -> Unit,
-    onDelete: () -> Unit,
-    onBack: () -> Unit,
+    onOpenDrawer: () -> Unit,
     onSyncNow: () -> Unit,
     syncInProgress: Boolean,
     lastSyncAt: Long?,
     lastSyncError: String?
 ) {
-    Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row {
-                Button(onClick = onSave) { Text("Save") }
-                Spacer(modifier = Modifier.width(8.dp))
-                TextButton(onClick = onDelete) { Text("Delete") }
-                Spacer(modifier = Modifier.width(8.dp))
-                TextButton(onClick = onBack) { Text("Back") }
-            }
+            TextButton(onClick = onOpenDrawer) { Text("Menu") }
             TextButton(onClick = onSyncNow, enabled = !syncInProgress) {
                 Text(if (syncInProgress) "Syncing..." else "Sync now")
             }
@@ -247,5 +242,26 @@ private fun NoteEditor(
             onValueChange = onUpdate,
             placeholder = { Text("Start writing...") }
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ActionsSheet(
+    onNewNote: () -> Unit,
+    onSyncNow: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Button(onClick = onNewNote, modifier = Modifier.fillMaxWidth()) { Text("New note") }
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = onSyncNow, modifier = Modifier.fillMaxWidth()) { Text("Sync now") }
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = onOpenSettings, modifier = Modifier.fillMaxWidth()) { Text("Settings") }
+            Spacer(modifier = Modifier.height(8.dp))
+            TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text("Close") }
+        }
     }
 }
