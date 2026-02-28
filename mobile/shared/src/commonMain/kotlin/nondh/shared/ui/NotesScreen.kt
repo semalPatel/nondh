@@ -1,6 +1,8 @@
 package nondh.shared.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +17,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Surface
@@ -37,10 +41,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import nondh.shared.Note
 import nondh.shared.ui.theme.NondhTheme
 import nondh.shared.ui.theme.WarmOnSurfaceVariant
 import nondh.shared.ui.theme.WarmSurface
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 
 @Composable
 fun NotesScreen(
@@ -149,7 +156,7 @@ private fun EditorOnlyScaffold(
             EditorContent(
                 text = state.draftText,
                 onUpdate = onUpdateDraft,
-                onSyncNow = onSyncNow,
+                onOpenDrawer = { scope.launch { drawerState.open() } },
                 syncInProgress = state.syncInProgress,
                 lastSyncAt = state.lastSyncAt,
                 lastSyncError = state.lastSyncError
@@ -228,12 +235,16 @@ private fun NotesDrawer(
 private fun EditorContent(
     text: String,
     onUpdate: (String) -> Unit,
-    onSyncNow: () -> Unit,
+    onOpenDrawer: () -> Unit,
     syncInProgress: Boolean,
     lastSyncAt: Long?,
     lastSyncError: String?
 ) {
     var showToast by remember { mutableStateOf(false) }
+    var menuVisible by remember { mutableStateOf(true) }
+    var editTick by remember { mutableStateOf(0) }
+    val interactionSource = remember { MutableInteractionSource() }
+
     LaunchedEffect(lastSyncError) {
         if (lastSyncError != null) {
             showToast = true
@@ -242,12 +253,31 @@ private fun EditorContent(
         }
     }
 
+    LaunchedEffect(editTick) {
+        if (editTick == 0) return@LaunchedEffect
+        delay(1500)
+        menuVisible = true
+    }
+
+    LaunchedEffect(interactionSource) {
+        interactionSource.interactions.collect { interaction ->
+            if (interaction is PressInteraction.Press) {
+                menuVisible = true
+            }
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         TextField(
             modifier = Modifier.fillMaxSize(),
             value = text,
-            onValueChange = onUpdate,
+            onValueChange = { updated ->
+                menuVisible = false
+                editTick += 1
+                onUpdate(updated)
+            },
             placeholder = { Text("Start writing...") },
+            interactionSource = interactionSource,
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = WarmSurface,
                 unfocusedContainerColor = WarmSurface,
@@ -265,6 +295,21 @@ private fun EditorContent(
                 fontSize = 14.sp
             )
         )
+
+        if (menuVisible) {
+            IconButton(
+                onClick = onOpenDrawer,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = "Menu",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
 
         if (showToast) {
             Surface(
