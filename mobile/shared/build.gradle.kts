@@ -7,11 +7,22 @@ plugins {
     id("app.cash.sqldelight")
 }
 
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
+
 kotlin {
     applyDefaultHierarchyTemplate()
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
+    val iosX64 = iosX64()
+    val iosArm64 = iosArm64()
+    val iosSimulatorArm64 = iosSimulatorArm64()
+    val xcframework = XCFramework()
+
+    listOf(iosX64, iosArm64, iosSimulatorArm64).forEach { target ->
+        target.binaries.framework {
+            baseName = "shared"
+            isStatic = true
+            xcframework.add(this)
+        }
+    }
 
     androidLibrary {
         namespace = "nondh.shared"
