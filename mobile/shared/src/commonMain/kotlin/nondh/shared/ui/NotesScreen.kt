@@ -161,8 +161,6 @@ private fun EditorOnlyScaffold(
                 text = state.draftText,
                 onUpdate = onUpdateDraft,
                 onOpenDrawer = { scope.launch { drawerState.open() } },
-                syncInProgress = state.syncInProgress,
-                lastSyncAt = state.lastSyncAt,
                 lastSyncError = state.lastSyncError
             )
 
@@ -240,8 +238,6 @@ private fun EditorContent(
     text: String,
     onUpdate: (String) -> Unit,
     onOpenDrawer: () -> Unit,
-    syncInProgress: Boolean,
-    lastSyncAt: Long?,
     lastSyncError: String?
 ) {
     var showToast by remember { mutableStateOf(false) }
