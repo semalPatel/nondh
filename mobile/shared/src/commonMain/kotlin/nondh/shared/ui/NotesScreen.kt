@@ -1,13 +1,6 @@
 package nondh.shared.ui
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,26 +22,25 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Surface
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import nondh.shared.Note
 import nondh.shared.ui.theme.NondhTheme
 import nondh.shared.ui.theme.WarmOnSurfaceVariant
@@ -147,22 +140,21 @@ private fun EditorOnlyScaffold(
                     onSelect = { note ->
                         onSelect(note)
                         scope.launch { drawerState.close() }
-                    },
-                    onNewNote = {
-                        onNewNote()
-                        scope.launch { drawerState.close() }
                     }
                 )
             }
         }
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            EditorContent(
-                text = state.draftText,
-                onUpdate = onUpdateDraft,
-                onOpenDrawer = { scope.launch { drawerState.open() } },
-                lastSyncError = state.lastSyncError
-            )
+            Column(modifier = Modifier.fillMaxSize()) {
+                ObsidianAppBar(onOpenDrawer = { scope.launch { drawerState.open() } })
+                EditorContent(
+                    text = state.draftText,
+                    onUpdate = onUpdateDraft,
+                    lastSyncError = state.lastSyncError,
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
             FloatingActionButton(
                 onClick = { showActions = true },
@@ -196,22 +188,33 @@ private fun EditorOnlyScaffold(
 }
 
 @Composable
-private fun NotesDrawer(
-    notes: List<Note>,
-    onSelect: (Note) -> Unit,
-    onNewNote: () -> Unit
-) {
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+private fun ObsidianAppBar(onOpenDrawer: () -> Unit) {
+    Surface(color = WarmSurface) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .height(48.dp)
+                .padding(start = 4.dp, end = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Notes", style = MaterialTheme.typography.titleMedium)
-            TextButton(onClick = onNewNote) {
-                Text("New")
+            IconButton(onClick = onOpenDrawer) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = "Menu",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun NotesDrawer(
+    notes: List<Note>,
+    onSelect: (Note) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         LazyColumn {
             items(notes) { note ->
                 Column(
@@ -220,11 +223,14 @@ private fun NotesDrawer(
                         .clickable { onSelect(note) }
                         .padding(vertical = 8.dp)
                 ) {
-                    Text(note.body.take(120), style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        note.body.take(120),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp)
+                    )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         "${note.updatedAt}",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -237,14 +243,10 @@ private fun NotesDrawer(
 private fun EditorContent(
     text: String,
     onUpdate: (String) -> Unit,
-    onOpenDrawer: () -> Unit,
-    lastSyncError: String?
+    lastSyncError: String?,
+    modifier: Modifier = Modifier
 ) {
     var showToast by remember { mutableStateOf(false) }
-    var menuVisible by remember { mutableStateOf(true) }
-    var editTick by remember { mutableStateOf(0) }
-    val interactionSource = remember { MutableInteractionSource() }
-
     LaunchedEffect(lastSyncError) {
         if (lastSyncError != null) {
             showToast = true
@@ -253,31 +255,12 @@ private fun EditorContent(
         }
     }
 
-    LaunchedEffect(editTick) {
-        if (editTick == 0) return@LaunchedEffect
-        delay(1500)
-        menuVisible = true
-    }
-
-    LaunchedEffect(interactionSource) {
-        interactionSource.interactions.collect { interaction ->
-            if (interaction is PressInteraction.Press) {
-                menuVisible = true
-            }
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
         TextField(
             modifier = Modifier.fillMaxSize(),
             value = text,
-            onValueChange = { updated ->
-                menuVisible = false
-                editTick += 1
-                onUpdate(updated)
-            },
+            onValueChange = onUpdate,
             placeholder = { Text("Start writing...") },
-            interactionSource = interactionSource,
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = WarmSurface,
                 unfocusedContainerColor = WarmSurface,
@@ -292,32 +275,9 @@ private fun EditorContent(
             ),
             textStyle = TextStyle(
                 color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 14.sp
+                fontSize = 12.sp
             )
         )
-
-        AnimatedVisibility(
-            visible = menuVisible,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
-                shadowElevation = 4.dp,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(12.dp)
-            ) {
-                IconButton(onClick = onOpenDrawer) {
-                    Icon(
-                        imageVector = Icons.Default.Menu,
-                        contentDescription = "Menu",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
 
         if (showToast) {
             Surface(
