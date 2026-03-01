@@ -51,10 +51,11 @@ class NotesViewModel(
 
     fun updateDraft(text: String) {
         state = state.copy(draftText = text)
+        saveDraftLocal()
         debounceJob?.cancel()
         debounceJob = scope.launch {
-            delay(800)
-            autoSaveDraft()
+            delay(1200)
+            syncNow()
         }
     }
 
@@ -113,7 +114,7 @@ class NotesViewModel(
         )
     }
 
-    private fun autoSaveDraft() {
+    private fun saveDraftLocal() {
         val text = state.draftText.trim()
         if (text.isBlank()) return
 
@@ -127,7 +128,5 @@ class NotesViewModel(
             sync.enqueueLocal(updated)
             state = state.copy(notes = db.listVisible())
         }
-
-        scope.launch { syncNow() }
     }
 }
